@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Library - Dr. [Doctor's Name]</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="index.html" class="text-xl font-bold">Dr. [Doctor's Name]</a>
+            <div>
+                <a href="index.html" class="px-3 hover:text-blue-200">Home</a>
+                <a href="videos.html" class="px-3 text-blue-200 font-semibold">Videos</a> <a href="about.html" class="px-3 hover:text-blue-200">About</a>
+                <a href="contact.html" class="px-3 hover:text-blue-200">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto py-12 px-6">
+
+        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Video Library</h1>
+
+        <div class="mb-8 p-4 bg-white rounded shadow">
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex-grow">
+                    <label for="searchInput" class="sr-only">Search Videos</label>
+                    <input type="text" id="searchInput" placeholder="Search by title or description..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="categoryFilter" class="sr-only">Filter by Category</label>
+                    <select id="categoryFilter"
+                            class="px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">All Categories</option>
+                        </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="videoGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <p id="loadingMessage" class="text-gray-600">Loading videos...</p>
+        </div>
+
+    </div>
+
+    <footer class="bg-gray-800 text-gray-300 p-6 text-center mt-12">
+        <p>&copy; 2025 Dr. [Doctor's Name]. All rights reserved.</p>
+    </footer>
+
+    <script src="js/videos.js"></script>
+
+</body>
+</html>
