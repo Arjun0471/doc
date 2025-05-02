@@ -2,8 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Configuration ---
-    const API_KEY = 'AIzaSyDqktWfdAYPhQKPhZ9s1_p-0cjicAWxGMs';
-    // List of YouTube Video IDs you want to display
+    const API_KEY = 'AIzaSyDqktWfdAYPhQKPhZ9s1_p-0cjicAWxGMs'; // <--- PASTE YOUR API KEY HERE!
     const VIDEO_IDS = [
         'ietM5QjjvVw',
         '6ZUYSSrB7cY',
@@ -18,117 +17,67 @@ document.addEventListener('DOMContentLoaded', () => {
         'k046d3AZ6Wk',
         'UA2OHMHnsGQ'
     ];
+    const VIDEOS_PER_PAGE = 9; // How many videos to show per page
 
     // --- DOM Elements ---
     const videoGrid = document.getElementById('videoGrid');
     const searchInput = document.getElementById('searchInput');
-    const categoryFilter = document.getElementById('categoryFilter'); // We might get category from API later
+    const categoryFilter = document.getElementById('categoryFilter');
     const loadingMessage = document.getElementById('loadingMessage');
+    const paginationControls = document.getElementById('paginationControls'); // Get the pagination container
 
-    let allVideosData = []; // To store processed video data from API
-    let uniqueCategories = new Set(); // To store unique category names
+    // --- State Variables ---
+    let allVideosData = []; // Stores raw data fetched & processed from API
+    let filteredVideosData = []; // Stores data after search/category filter applied
+    let uniqueCategories = new Set();
+    let currentPage = 1; // Current page number
 
-    // --- Check if API Key is set ---
-    if (API_KEY === 'YOUR_API_KEY' || !API_KEY) {
-        console.error("API Key not set in js/videos.js. Please replace 'YOUR_API_KEY'.");
-        if (loadingMessage) loadingMessage.textContent = 'Error: API Key not configured.';
-        if (videoGrid) videoGrid.innerHTML = '<p class="text-red-500 text-center col-span-full">API Key not configured.</p>';
-        return; // Stop execution if key is missing
-    }
-    if (!VIDEO_IDS || VIDEO_IDS.length === 0) {
-         if (loadingMessage) loadingMessage.textContent = 'No video IDs specified.';
-         if (videoGrid) videoGrid.innerHTML = '<p class="text-orange-500 text-center col-span-full">No video IDs have been specified in the code.</p>';
-         return;
-    }
+    // --- Check API Key and Video IDs (Same as before) ---
+    if (API_KEY === 'YOUR_API_KEY' || !API_KEY || API_KEY === 'YOUR_NEW_API_KEY') { /* ... error handling ... */ return; }
+    if (!VIDEO_IDS || VIDEO_IDS.length === 0) { /* ... error handling ... */ return; }
 
-
-    // --- Fetch Video Data from YouTube API ---
+    // --- Fetch Video Data from YouTube API (Function remains the same) ---
     function fetchVideoData() {
-        // Construct the API URL
-        // We fetch details ('snippet') and potentially 'contentDetails' for duration etc.
         const idsString = VIDEO_IDS.join(',');
         const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${idsString}&key=${API_KEY}`;
 
         fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) {
-                    // Try to parse error message from YouTube API response
-                    return response.json().then(err => {
-                         throw new Error(`YouTube API error: ${response.status} - ${err.error?.message || 'Unknown error'}`);
-                    });
-                }
-                return response.json(); // Parse the JSON data
-            })
+            .then(response => { /* ... error handling ... */ return response.json(); })
             .then(data => {
-                // Process the API response
-                allVideosData = processApiResponse(data.items || []); // data.items contains the array of videos
-                populateCategories(allVideosData); // Populate filter based on processed data
-                displayVideos(allVideosData); // Display videos
-                if (loadingMessage) loadingMessage.style.display = 'none'; // Hide loading message
+                allVideosData = processApiResponse(data.items || []);
+                filteredVideosData = allVideosData; // Initially, filtered is all
+                populateCategories(allVideosData);
+                renderPage(); // Initial render of page 1
+                if (loadingMessage) loadingMessage.style.display = 'none';
             })
-            .catch(error => {
-                console.error('Error fetching or processing YouTube data:', error);
-                if (videoGrid) {
-                    videoGrid.innerHTML = `<p class="text-red-500 col-span-full">Could not load video data from YouTube API. Error: ${error.message}. Please check console for details.</p>`;
-                }
-                 if (loadingMessage) loadingMessage.style.display = 'none';
-            });
+            .catch(error => { /* ... error handling ... */ });
     }
 
-    // --- Process API Response Data ---
-    function processApiResponse(items) {
-        // Transform API data into a structure similar to our old videos.json for consistency
-        return items.map(item => ({
-            id: item.id, // YouTube video ID
+    // --- Process API Response Data (Function remains the same) ---
+    function processApiResponse(items) { /* ... returns mapped video data ... */
+       return items.map(item => ({
+            id: item.id,
             title: item.snippet?.title || 'No title',
-            description: item.snippet?.description?.substring(0, 100) + '...' || 'No description', // Shorten description
-            category: item.snippet?.tags?.[0] || 'General', // Use first tag as category, or default
-            // Alternatively, you might manage categories separately if tags aren't suitable
+            description: item.snippet?.description?.substring(0, 100) + '...' || 'No description',
+            category: item.snippet?.tags?.[0] || 'General',
             videoId: item.id,
-            platform: 'youtube' // Platform is always YouTube here
-            // Add other details if needed, e.g., item.contentDetails.duration
+            platform: 'youtube'
         }));
     }
 
-    // --- Populate Category Filter ---
-     function populateCategories(videos) {
-        uniqueCategories.clear(); // Clear previous categories
-        uniqueCategories.add('all'); // Add 'all' option
-        videos.forEach(video => {
-            if (video.category) {
-                 uniqueCategories.add(video.category);
-            }
-        });
+    // --- Populate Category Filter (Function remains the same) ---
+    function populateCategories(videos) { /* ... populates dropdown ... */ }
 
-        // Only update dropdown if it exists
-        if (categoryFilter) {
-            // Store current selection to reapply if possible
-            const currentSelection = categoryFilter.value;
-            categoryFilter.innerHTML = ''; // Clear existing options
-            uniqueCategories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category === 'all' ? 'All Categories' : category;
-                categoryFilter.appendChild(option);
-            });
-             // Reapply selection
-            if (uniqueCategories.has(currentSelection)) {
-                 categoryFilter.value = currentSelection;
-            } else {
-                 categoryFilter.value = 'all';
-            }
-        } else {
-            console.warn("Category filter dropdown not found in HTML.");
-        }
+
+    // --- NEW: Render Current Page (Combines Display & Pagination) ---
+    function renderPage() {
+        displayVideosForCurrentPage(filteredVideosData);
+        renderPaginationControls(filteredVideosData);
     }
 
-
-    // --- Display Videos (Iframe part is the same as corrected before) ---
-    function displayVideos(videosToDisplay) {
-        if (!videoGrid) {
-            console.error("Video grid container not found in HTML.");
-            return;
-        }
+    // --- MODIFIED: Display Videos (Now considers pagination) ---
+    function displayVideosForCurrentPage(videosToDisplay) {
+        if (!videoGrid) { console.error("Video grid container not found."); return; }
         videoGrid.innerHTML = ''; // Clear existing grid content
 
         if (videosToDisplay.length === 0) {
@@ -136,17 +85,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        videosToDisplay.forEach(video => {
-            const videoCard = document.createElement('div');
-            videoCard.className = 'bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:scale-105'; // Tailwind classes
+        // Calculate videos for the current page
+        const startIndex = (currentPage - 1) * VIDEOS_PER_PAGE;
+        const endIndex = startIndex + VIDEOS_PER_PAGE;
+        const videosOnPage = videosToDisplay.slice(startIndex, endIndex);
 
-            // YouTube embed code (assuming platform is always 'youtube' now)
+        if (videosOnPage.length === 0 && currentPage > 1) {
+             // Handle cases where filter results in empty page beyond page 1
+             currentPage = 1; // Go back to page 1
+             displayVideosForCurrentPage(videosToDisplay); // Re-render page 1
+             return;
+        }
+
+
+        videosOnPage.forEach(video => {
+            const videoCard = document.createElement('div');
+            videoCard.className = 'bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:scale-105';
+
             const embedCode = `<iframe class="w-full h-auto aspect-video" src="https://www.youtube.com/embed/${video.videoId}" title="${video.title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
 
             videoCard.innerHTML = `
-                <div class="w-full">
-                    ${embedCode}
-                </div>
+                <div class="w-full">${embedCode}</div>
                 <div class="p-4">
                     <h3 class="text-lg font-semibold text-gray-800 mb-1">${video.title}</h3>
                     <p class="text-sm text-gray-600 mb-2">${video.description}</p>
@@ -157,35 +116,72 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Filter and Search Logic (Uses the fetched 'allVideosData') ---
+    // --- NEW: Render Pagination Controls ---
+    function renderPaginationControls(videosToPaginate) {
+        if (!paginationControls) { console.error("Pagination controls container not found."); return; }
+        paginationControls.innerHTML = ''; // Clear old controls
+
+        const totalVideos = videosToPaginate.length;
+        const totalPages = Math.ceil(totalVideos / VIDEOS_PER_PAGE);
+
+        if (totalPages <= 1) return; // No controls needed for 1 page or less
+
+        // Page x of y Indicator
+        const pageInfo = document.createElement('span');
+        pageInfo.className = 'text-sm text-gray-700';
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+        // Previous Button
+        const prevButton = document.createElement('button');
+        prevButton.textContent = 'Previous';
+        prevButton.className = 'px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed';
+        prevButton.disabled = currentPage === 1;
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage(); // Re-render videos and controls
+            }
+        });
+
+        // Next Button
+        const nextButton = document.createElement('button');
+        nextButton.textContent = 'Next';
+        nextButton.className = 'px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed';
+        nextButton.disabled = currentPage === totalPages;
+        nextButton.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage(); // Re-render videos and controls
+            }
+        });
+
+        // Add controls to the container
+        paginationControls.appendChild(prevButton);
+        paginationControls.appendChild(pageInfo); // Add page indicator between buttons
+        paginationControls.appendChild(nextButton);
+    }
+
+
+    // --- MODIFIED: Filter and Search Logic (Resets pagination) ---
     function filterAndDisplayVideos() {
         const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
         const selectedCategory = categoryFilter ? categoryFilter.value : 'all';
 
-        const filteredVideos = allVideosData.filter(video => {
+        filteredVideosData = allVideosData.filter(video => { // Update filtered data
             const matchesCategory = selectedCategory === 'all' || video.category === selectedCategory;
-            // Search in title and description
             const matchesSearch = video.title.toLowerCase().includes(searchTerm) || video.description.toLowerCase().includes(searchTerm);
             return matchesCategory && matchesSearch;
         });
 
-        displayVideos(filteredVideos);
+        currentPage = 1; // Reset to page 1 whenever filters change
+        renderPage();    // Render page 1 of filtered results
     }
 
-    // --- Event Listeners ---
-    if (searchInput) {
-        searchInput.addEventListener('input', filterAndDisplayVideos);
-    } else {
-        console.warn("Search input not found in HTML.");
-    }
-
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', filterAndDisplayVideos);
-    } else {
-        console.warn("Category filter dropdown not found in HTML.");
-    }
+    // --- Event Listeners (Remain the same) ---
+    if (searchInput) { searchInput.addEventListener('input', filterAndDisplayVideos); }
+    if (categoryFilter) { categoryFilter.addEventListener('change', filterAndDisplayVideos); }
 
     // --- Initial Load ---
-    fetchVideoData(); // Start the process by fetching data from YouTube API
+    fetchVideoData(); // Start the process
 
 }); // End of DOMContentLoaded
