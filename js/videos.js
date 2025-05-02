@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function fetchVideoData() {
         const idsString = VIDEO_IDS.join(',');
         const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${idsString}&key=${API_KEY}`;
+        console.log("Attempting API call from:", document.location.href);
 
         fetch(apiUrl)
             .then(response => { /* ... error handling ... */ return response.json(); })
