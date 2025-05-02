@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Configuration ---
-    const API_KEY = 'AIzaSyDqktWfdAYPhQKPhZ9s1_p-0cjicAWxGMs'; // <--- PASTE YOUR API KEY HERE!
+    const API_KEY = 'AIzaSyDqktWfdAYPhQKPhZ9s1_p-0cjicAWxGMs';
     // List of YouTube Video IDs you want to display
     const VIDEO_IDS = [
         'ietM5QjjvVw',
